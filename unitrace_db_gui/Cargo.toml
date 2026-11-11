@@ -1,0 +1,23 @@
+[package]
+name = "unitrace_db_gui"
+version = "0.1.0"
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
+
+[dependencies]
+slint = "1.18.1"
+unitrace_db = { path = "../unitrace_db" }
+unitrace_db_gui_core = { path = "../unitrace_db_gui_core" }
+unitrace_db_gui_handler = { path = "../unitrace_db_gui_handler" }
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+slint-build = "1.18.1"

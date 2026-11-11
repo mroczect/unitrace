@@ -1,0 +1,134 @@
+// Gaya Jadul (VB6/Tkinter): Abu-abu, Border Hitam, Tanpa Animasi.
+
+component OldInput inherits Rectangle {
+    in-out property <string> text;
+    callback edited(string);
+    background: white;
+    border-color: black;
+    border-width: 1px;
+    height: 24px;
+
+    input := TextInput {
+        text: root.text;
+        padding-left: 4px;
+        vertical-alignment: center;
+        edited => { root.text = self.text; root.edited(self.text); }
+    }
+}
+
+component OldButton inherits Rectangle {
+    in property <string> label;
+    callback clicked;
+    background: #d4d0c8; // Abu-abu khas Windows 98
+    border-color: black;
+    border-width: 1px;
+    height: 24px;
+    width: 80px;
+
+    Text {
+        text: root.label;
+        color: black;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+
+    TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+export component AppWindow inherits Window {
+    title: "Unitrace - Pencarian Database";
+    preferred-width: 1000px;
+    preferred-height: 600px;
+    background: #f0f0f0; // Latar abu-abu terang
+
+    in property <string> status-text: "Memuat sistem...";
+    in property <[RecordView]> results;
+    in property <string> not-found-keyword: "";
+    in property <int> not-found-rows: 0;
+    in property <int> not-found-cols: 0;
+    in property <string> not-found-version: "";
+
+    callback search(string);
+
+    VerticalLayout {
+        padding: 12px;
+        spacing: 8px;
+
+        // Panel Atas: Input
+        HorizontalLayout {
+            spacing: 8px;
+            input := OldInput {
+                width: 600px;
+                edited(text) => { root.search(text); }
+            }
+            OldButton {
+                label: "Cari (Enter)";
+                clicked => { root.search(input.text); }
+            }
+        }
+
+        // Panel Status
+        Text {
+            text: root.status-text;
+            color: black;
+            font-family: "Courier New", monospace;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        // Panel Tabel Hasil
+        Rectangle {
+            border-color: black;
+            border-width: 1px;
+            background: white;
+            vertical-stretch: 1;
+
+            ListView {
+                for row in root.results : Rectangle {
+                    height: 24px;
+                    border-bottom-width: 1px;
+                    border-color: #cccccc;
+
+                    HorizontalLayout {
+                        padding-left: 4px;
+                        spacing: 4px;
+                        for col in row.columns : Text {
+                            text: col;
+                            width: 140px; // Lebar seragam
+                            vertical-alignment: center;
+                            font-size: 12px;
+                            color: black;
+                            overflow: elide;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Panel Bukti "Not Found" (Krusial untuk UX Defensible)
+        if root.not-found-keyword != "" {
+            Rectangle {
+                background: #ffffcc; // Kuning pudar
+                border-color: black;
+                border-width: 1px;
+                height: 100px;
+
+                VerticalLayout {
+                    padding: 8px;
+                    spacing: 4px;
+                    Text { text: "DATA TIDAK DITEMUKAN"; font-weight: 700; font-size: 14px; }
+                    Text { text: "Kata kunci: " + root.not-found-keyword; font-size: 12px; }
+                    Text { text: "Cakupan pencarian: " + root.not-found-cols + " kolom x " + root.not-found-rows + " baris."; font-size: 12px; }
+                    Text { text: "Status Database: " + root.not-found-version; font-size: 12px; }
+                }
+            }
+        }
+    }
+}
+
+// Struct untuk Slint
+export struct RecordView {
+    columns: [string],
+}
