@@ -13,6 +13,8 @@ use serde_json as _;
 use sha2 as _;
 use tempfile as _;
 
+use ed25519_dalek as _;
+use ed25519_dalek as _;
 use unitrace_db_core::checksum::{Sha256Checksum, checksum_hex};
 use unitrace_db_handler::traits::Checksum;
 
