@@ -29,3 +29,10 @@ venv/
 
 # uv
 uv.lock.bak
+
+# Sensitive
+/signing.key
+/*.key
+/public_key.hex
+/out.upkg
+/*.upkg
