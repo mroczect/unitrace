@@ -6,7 +6,9 @@ pub mod csv_import;
 pub mod integrity;
 pub mod metadata_io;
 pub mod normalize;
+pub mod package;
 pub mod searcher;
+pub mod signature;
 pub mod sqlcipher;
 
 #[cfg(test)]
