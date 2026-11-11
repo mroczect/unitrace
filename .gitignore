@@ -10,3 +10,4 @@ issue*
 release*
 !release.json
 a.sh
+.tmp/

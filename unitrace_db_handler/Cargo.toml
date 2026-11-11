@@ -2,7 +2,7 @@
 name = "unitrace_db_handler"
 version = "0.1.0"
 readme = "README.md"
-description = "contract, no_std, only thiserror"
+description = "Contract and definitions for the unitrace database"
 authors.workspace = true
 categories.workspace = true
 edition.workspace = true
@@ -13,6 +13,7 @@ license.workspace = true
 keywords.workspace = true
 
 [dependencies]
+zeroize = { version = "1.9.1", default-features = false, features = ["alloc"] }
 
 [lints]
 workspace = true
