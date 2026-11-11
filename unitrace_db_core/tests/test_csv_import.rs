@@ -16,6 +16,10 @@ use serde_json as _;
 use sha2 as _;
 use tempfile::tempdir;
 
+use ed25519_dalek as _;
+use ed25519_dalek as _;
+use ed25519_dalek as _;
+use ed25519_dalek as _;
 use unitrace_db_core::csv_import::{NORM_ALL_COLUMN, TABLE_NAME, create_table, import_csv};
 use unitrace_db_core::normalize::DefaultNormalizer;
 use unitrace_db_core::sqlcipher::open_encrypted;
