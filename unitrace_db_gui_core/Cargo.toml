@@ -1,6 +1,8 @@
 [package]
 name = "unitrace_db_gui_core"
 version = "0.1.0"
+description = "Concrete GUI controller implementation for the unitrace database"
+readme = "README.md"
 authors.workspace = true
 categories.workspace = true
 edition.workspace = true
@@ -11,7 +13,8 @@ license.workspace = true
 keywords.workspace = true
 
 [dependencies]
-unitrace_db = { path = "../unitrace_db" }
+unitrace_db_core = { path = "../unitrace_db_core" }
+unitrace_db_handler = { path = "../unitrace_db_handler" }
 unitrace_db_gui_handler = { path = "../unitrace_db_gui_handler" }
 
 [lints]
