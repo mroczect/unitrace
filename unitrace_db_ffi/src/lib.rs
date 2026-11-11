@@ -2,10 +2,8 @@ use std::cell::RefCell;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::time::{Duration, Instant};
-
 use serde::Serialize;
 use tempfile::TempDir;
-
 use unitrace_db::{
     DatabaseReader, DefaultGuiController, DefaultSearcher, EncryptionKey, GuiController,
     OpenConfig, Package, ViewState, resolve_public_key, verify_bytes,
@@ -132,16 +130,13 @@ pub unsafe extern "C" fn unitrace_init(
         .to_str()
         .unwrap_or("");
     let pass = unsafe { CStr::from_ptr(key) }.to_str().unwrap_or("");
-
     if let Err(e) = check_perms(pkg_path) {
         return fail(&e, false);
     }
-
     let pkg = match Package::read(std::path::Path::new(pkg_path)) {
         Ok(p) => p,
         Err(e) => return fail(&format!("package read error: {e}"), false),
     };
-
     let pk = match resolve_public_key() {
         Some(k) => k,
         None => {
@@ -155,7 +150,6 @@ pub unsafe extern "C" fn unitrace_init(
         std::thread::sleep(FAIL_DELAY);
         return fail(&format!("signature invalid: {e}"), false);
     }
-
     let tmp = match TempDir::new() {
         Ok(t) => t,
         Err(e) => return fail(&format!("tempdir error: {e}"), true),
@@ -168,7 +162,6 @@ pub unsafe extern "C" fn unitrace_init(
     if let Err(e) = std::fs::write(&meta_path, &pkg.meta) {
         return fail(&format!("write meta: {e}"), true);
     }
-
     let config = match OpenConfig::try_new(
         db_path,
         meta_path,
@@ -183,7 +176,6 @@ pub unsafe extern "C" fn unitrace_init(
         Ok(c) => c,
         Err(e) => return fail(&format!("config error: {e}"), true),
     };
-
     let searcher = match DefaultSearcher::open(&config) {
         Ok(s) => s,
         Err(e) => {
@@ -191,14 +183,12 @@ pub unsafe extern "C" fn unitrace_init(
             return fail(&format!("db open error: {e}"), true);
         }
     };
-
     let columns: Vec<String> = searcher
         .schema()
         .columns()
         .iter()
         .map(|c| c.name().to_string())
         .collect();
-
     let controller = DefaultGuiController::new(searcher);
     STATE.with(|s| {
         *s.borrow_mut() = Some(Loaded {
@@ -206,9 +196,7 @@ pub unsafe extern "C" fn unitrace_init(
             _tempdir: tmp,
         });
     });
-
     FAILURES.with(|v| v.borrow_mut().clear());
-
     to_c(
         serde_json::to_string(&InitResponse {
             status: "ok".into(),
