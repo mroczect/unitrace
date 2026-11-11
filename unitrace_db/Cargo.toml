@@ -1,0 +1,18 @@
+[package]
+name = "unitrace_db"
+version = "0.1.0"
+readme = "README.md"
+description = "Facade untuk unitrace_db — thin re-export dari unitrace_db_core"
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true
