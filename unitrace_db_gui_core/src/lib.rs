@@ -10,7 +10,7 @@ pub struct DefaultGuiController {
 
 impl DefaultGuiController {
     #[must_use]
-    pub fn new(searcher: DefaultSearcher) -> Self {
+    pub const fn new(searcher: DefaultSearcher) -> Self {
         Self { searcher }
     }
 }
@@ -18,7 +18,6 @@ impl DefaultGuiController {
 impl GuiController for DefaultGuiController {
     fn search(&self, keyword: &str) -> ViewState {
         let trimmed = keyword.trim();
-
         if trimmed.is_empty() {
             return ViewState {
                 status_text: "Siap mencari. Ketik nomor rangka, mesin, atau nama.".to_string(),
@@ -60,7 +59,6 @@ impl GuiController for DefaultGuiController {
                             columns: rec.fields().to_vec(),
                         })
                         .collect();
-
                     ViewState {
                         status_text: format!(
                             "Ditemukan {} baris yang cocok.",
