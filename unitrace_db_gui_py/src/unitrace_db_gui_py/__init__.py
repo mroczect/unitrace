@@ -1,4 +1,3 @@
-"""Unitrace Tkinter GUI (Python + FFI to Rust)."""
 
 from .app import UnitraceApp, launch
 from .ffi import UnitraceFFI, open_default

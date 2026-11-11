@@ -1,6 +1,8 @@
 [package]
 name = "unitrace_db_gui_handler"
 version = "0.1.0"
+description = "Contract types and traits for the unitrace database GUI layer"
+readme = "README.md"
 authors.workspace = true
 categories.workspace = true
 edition.workspace = true

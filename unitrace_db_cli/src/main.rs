@@ -3,20 +3,122 @@
     reason = "CLI: user-facing output is the whole point"
 )]
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use unitrace_db::{
-    BuildConfig, ColumnDef, ColumnKind, DatabaseBuilder, DefaultBuilder, EncryptionKey, Schema,
+    BuildConfig, ColumnDef, ColumnKind, DatabaseBuilder, DefaultBuilder, EMBEDDED_PUBLIC_KEY_HEX,
+    EncryptionKey, Package, SIGNATURE_LEN, Schema, resolve_public_key, sign_bytes, verify_bytes,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut args = std::env::args().skip(1);
-    let csv_path = args.next().unwrap_or_else(|| "data.csv".to_string());
-    let db_path = args.next().unwrap_or_else(|| "data.db".to_string());
-    let meta_path = args.next().unwrap_or_else(|| "data.meta.json".to_string());
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    let cmd = args.first().map_or("help", String::as_str);
+    let rest = if args.len() > 1 { &args[1..] } else { &[] };
 
-    let password = "supersecretkey123".to_string();
+    match cmd {
+        "keygen" => cmd_keygen(rest),
+        "build" => cmd_build(rest),
+        "verify" => cmd_verify(rest),
+        "inspect" => cmd_inspect(rest),
+        "help" | "-h" | "--help" => {
+            print_help();
+            Ok(())
+        }
+        other => {
+            eprintln!("unknown command: {other}");
+            print_help();
+            std::process::exit(2);
+        }
+    }
+}
+
+fn print_help() {
+    println!("unitrace-db-cli — developer toolchain untuk Unitrace database");
+    println!();
+    println!("USAGE:");
+    println!("  unitrace-db-cli keygen <signing.key>");
+    println!("      Generate Ed25519 keypair. Tulis private key ke <signing.key>");
+    println!("      (chmod 600), print public key hex ke stdout.");
+    println!("      Public key harus di-embed ke unitrace_db_core/public_key.hex,");
+    println!("      lalu rebuild binary app.");
+    println!();
+    println!("  unitrace-db-cli build <csv> <signing.key> <out.upkg>");
+    println!("      CSV → SQLCipher encrypt (env UNITRACE_DB_KEY) → sign → package.");
+    println!("      Hasil: 1 file .upkg siap dikirim ke user.");
+    println!();
+    println!("  unitrace-db-cli verify <in.upkg>");
+    println!("      Verify signature (terhadap embedded public key).");
+    println!();
+    println!("  unitrace-db-cli inspect <in.upkg>");
+    println!("      Tampilkan metadata package (signature, ukuran, dsb).");
+}
+
+fn cmd_keygen(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
+    let path = args.first().ok_or("usage: keygen <signing.key>")?;
+
+    if Path::new(path).exists() {
+        return Err(format!(
+            "{path} sudah ada. Hapus dulu kalau mau regenerate (akan invalidate semua package lama)."
+        )
+        .into());
+    }
+
+    use rand::rngs::OsRng;
+    let sk = ed25519_dalek::SigningKey::generate(&mut OsRng);
+    std::fs::write(path, sk.to_bytes())?;
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut p = std::fs::metadata(path)?.permissions();
+        p.set_mode(0o600);
+        std::fs::set_permissions(path, p)?;
+    }
+
+    let pub_hex = hex::encode(sk.verifying_key().to_bytes());
+    println!("Signing key: {path}  (chmod 600, simpan offline!)");
+    println!();
+    println!("Public key (hex 64 chars):");
+    println!("  {pub_hex}");
+    println!();
+    println!("Langkah selanjutnya:");
+    println!("  1. Timpa unitrace_db_core/public_key.hex dengan:");
+    println!("     {pub_hex}");
+    println!("  2. Rebuild binary app:");
+    println!("     cargo build --release -p unitrace_db_ffi");
+    println!("  3. Build package:");
+    println!("     unitrace-db-cli build data.csv {path} out.upkg");
+    println!();
+    println!("PENTING: simpan {path} di tempat aman. Kalau hilang, semua package");
+    println!("harus di-rebuild dengan key baru.");
+    Ok(())
+}
+
+fn cmd_build(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
+    if args.len() < 3 {
+        return Err("usage: build <csv> <signing.key> <out.upkg>".into());
+    }
+    let (csv_path, key_path, out_path) = (&args[0], &args[1], &args[2]);
+
+    let password = std::env::var("UNITRACE_DB_KEY").map_err(|_| {
+        "env UNITRACE_DB_KEY wajib diisi. Generate dulu:\n  \
+         head -c 32 /dev/urandom | xxd -p -c 64"
+    })?;
+
+    if !Path::new(csv_path).is_file() {
+        return Err(format!("CSV tidak ditemukan: {csv_path}").into());
+    }
+
+    let key_bytes = std::fs::read(key_path).map_err(|e| format!("read {key_path}: {e}"))?;
+    let key_arr: [u8; 32] = key_bytes
+        .try_into()
+        .map_err(|_| format!("{key_path} harus 32 bytes"))?;
+    let signing_key = ed25519_dalek::SigningKey::from_bytes(&key_arr);
+
+    let tmp = tempfile::TempDir::new()?;
+    let db_path = tmp.path().join("data.db");
+    let meta_path = tmp.path().join("data.meta.json");
 
     let cols = vec![
         ColumnDef::try_new("no_perjanjian".into(), ColumnKind::Text)?
@@ -50,21 +152,93 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = BuildConfig::try_new(
         schema,
-        PathBuf::from(&db_path),
-        PathBuf::from(&meta_path),
-        PathBuf::from(&csv_path),
+        db_path.clone(),
+        meta_path.clone(),
+        PathBuf::from(csv_path),
         EncryptionKey::try_new(password)?,
         "v1.0.0".into(),
     )?;
 
+    eprintln!("[1/3] build SQLCipher db dari CSV...");
     let metadata = DefaultBuilder::new().build(&config)?;
 
-    println!("Database berhasil dibuat:");
-    println!("  csv    : {csv_path}");
-    println!("  db     : {db_path}");
-    println!("  meta   : {meta_path}");
-    println!("  rows   : {}", metadata.row_count());
-    println!("  build  : {}", metadata.built_at());
-    println!("  sha256 : {}", metadata.checksum_sha256());
+    eprintln!("[2/3] sign db+meta dengan Ed25519...");
+    let db_bytes = std::fs::read(&db_path)?;
+    let meta_bytes = std::fs::read(&meta_path)?;
+    let sig = sign_bytes(&signing_key, &db_bytes, &meta_bytes);
+
+    eprintln!("[3/3] package ke {out_path}...");
+    let pkg = Package::new(db_bytes, meta_bytes, sig);
+    pkg.write(Path::new(out_path))?;
+
+    let total = std::fs::metadata(out_path)?.len();
+    println!("Package dibuat:");
+    println!("  out     : {out_path}");
+    println!("  size    : {total} bytes");
+    println!("  rows    : {}", metadata.row_count());
+    println!("  build   : {}", metadata.built_at());
+    println!("  db_sha  : {}", metadata.checksum_sha256());
+    println!();
+    println!("Verifikasi embedded public key sebelum ship:");
+    let embedded = parse_embedded_pub_hex();
+    let signing_pub = hex::encode(signing_key.verifying_key().to_bytes());
+    if embedded == signing_pub {
+        println!("  OK — public key di binary sudah match signing key ini.");
+    } else {
+        println!("  WARNING — public key di binary TIDAK match dengan signing key ini!");
+        println!("  Embedded : {embedded}");
+        println!("  Signing  : {signing_pub}");
+        println!("  Update unitrace_db_core/public_key.hex dan rebuild binary.");
+    }
+    Ok(())
+}
+
+fn parse_embedded_pub_hex() -> String {
+    let trimmed = EMBEDDED_PUBLIC_KEY_HEX.trim();
+    if trimmed.len() == 64 {
+        trimmed.to_string()
+    } else {
+        String::from("<placeholder>")
+    }
+}
+
+fn cmd_verify(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
+    let path = args.first().ok_or("usage: verify <in.upkg>")?;
+    let pkg = Package::read(Path::new(path))?;
+    let pk = resolve_public_key().ok_or(
+        "embedded public key belum dikonfigurasi (still placeholder). Update public_key.hex lalu rebuild.",
+    )?;
+    verify_bytes(&pk, &pkg.db, &pkg.meta, &pkg.signature)?;
+    println!("OK — signature valid. Package asli dari developer.");
+    Ok(())
+}
+
+fn cmd_inspect(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
+    let path = args.first().ok_or("usage: inspect <in.upkg>")?;
+    let pkg = Package::read(Path::new(path))?;
+    let db_size = pkg.db.len();
+    let meta_size = pkg.meta.len();
+    let sig_ok = resolve_public_key()
+        .map(|pk| verify_bytes(&pk, &pkg.db, &pkg.meta, &pkg.signature).is_ok())
+        .unwrap_or(false);
+
+    println!("Package: {path}");
+    println!("  db size         : {db_size} bytes");
+    println!("  meta size       : {meta_size} bytes");
+    println!("  signature       : {}", hex::encode(&pkg.signature[..8]));
+    println!("  signature valid : {sig_ok}");
+
+    if let Ok(text) = std::str::from_utf8(&pkg.meta)
+        && let Ok(json) = serde_json::from_str::<serde_json::Value>(text)
+    {
+        println!();
+        println!("Metadata:");
+        println!("  data_version    : {}", json["data_version"]);
+        println!("  row_count       : {}", json["row_count"]);
+        println!("  built_at        : {}", json["built_at"]);
+        println!("  checksum_sha256 : {}", json["checksum_sha256"]);
+    }
+    println!();
+    println!("Signature constant: {SIGNATURE_LEN} bytes (Ed25519).");
     Ok(())
 }

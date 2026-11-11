@@ -3,7 +3,7 @@ SHELL := /bin/bash
 
 CARGO := cargo
 PKG ?=
-CRATES := unitrace_db_handler unitrace_db_core unitrace_db
+CRATES := unitrace_db_handler unitrace_db_core unitrace_db unitrace_db_gui_handler unitrace_db_gui_core unitrace_db_ffi unitrace_db_cli
 
 .DEFAULT_GOAL := help
 .PHONY: help
@@ -55,14 +55,22 @@ db:
 	$(MAKE) ci-strict PKG=unitrace_db
 
 .PHONY: verify-layers
-verify-layers: 
-	@if $(CARGO) tree -p unitrace_db_handler --depth 1 2>/dev/null | grep -qE 'unitrace_db_(core|db) v'; then \
-		echo "FAIL: unitrace_db_handler depends on core/db"; exit 1; fi
+verify-layers:
+	@if $(CARGO) tree -p unitrace_db_handler --depth 1 2>/dev/null | grep -qE 'unitrace_db_(core|db|gui_core|gui_handler) v'; then \
+		echo "FAIL: unitrace_db_handler depends on implementation crates"; exit 1; fi
+	@if $(CARGO) tree -p unitrace_db_gui_handler --depth 1 2>/dev/null | grep -qE 'unitrace_db_(core|db|gui_core) v'; then \
+		echo "FAIL: unitrace_db_gui_handler depends on implementation crates"; exit 1; fi
 	@if $(CARGO) tree -p unitrace_db_core --depth 1 2>/dev/null | grep -q 'unitrace_db v'; then \
-		echo "FAIL: unitrace_db_core depends on unitrace_db"; exit 1; fi
-	@if $(CARGO) tree -p unitrace_db --depth 1 2>/dev/null | grep -qE '(rusqlite|csv|sha2|hex) v'; then \
+		echo "FAIL: unitrace_db_core depends on unitrace_db facade"; exit 1; fi
+	@if $(CARGO) tree -p unitrace_db_gui_core --depth 1 2>/dev/null | grep -q 'unitrace_db v'; then \
+		echo "FAIL: unitrace_db_gui_core depends on unitrace_db facade"; exit 1; fi
+	@if $(CARGO) tree -p unitrace_db --depth 1 2>/dev/null | grep -qE '(rusqlite|csv|sha2 0\.11|hex) v'; then \
 		echo "FAIL: unitrace_db depends directly on rusqlite/csv/sha2/hex"; exit 1; fi
-	@echo "✓ layers OK"
+	@if $(CARGO) tree -p unitrace_db_ffi --depth 1 2>/dev/null | grep -qE 'unitrace_db_(handler|core|gui_handler|gui_core) v'; then \
+		echo "FAIL: unitrace_db_ffi depends on internal crates (must use facade only)"; exit 1; fi
+	@if $(CARGO) tree -p unitrace_db_cli --depth 1 2>/dev/null | grep -qE 'unitrace_db_(handler|core|gui_handler|gui_core) v'; then \
+		echo "FAIL: unitrace_db_cli depends on internal crates (must use facade only)"; exit 1; fi
+	@echo "✓ layers OK (strict: handler ← core ← facade ← consumers)"
 
 .PHONY: audit deny machete outdated
 audit: 

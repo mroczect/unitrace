@@ -13,6 +13,8 @@ use serde_json as _;
 use sha2 as _;
 use tempfile::tempdir;
 
+use ed25519_dalek as _;
+use ed25519_dalek as _;
 use unitrace_db_core::sqlcipher::{apply_key, open_encrypted, probe_connection, verify_cipher};
 use unitrace_db_handler::{EncryptionKey, Error};
 

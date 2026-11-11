@@ -24,7 +24,7 @@ pedantic = { level = "deny", priority = -1 }
 perf = { level = "deny", priority = -1 }
 style = { level = "deny", priority = -1 }
 suspicious = { level = "deny", priority = -1 }
-
+multiple_crate_versions = { level = "allow", priority = 1 }
 arithmetic_side_effects = "deny"
 dbg_macro = "deny"
 exit = "deny"
