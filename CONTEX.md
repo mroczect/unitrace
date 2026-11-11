@@ -24,8 +24,8 @@ Untuk mencari satu nomor rangka atau nomor mesin di 8.000 baris itu, pemilik pro
 
 Ini bukan bug Excel. Ini cara kerja Excel. Excel mencari **persis apa yang diketik**. Kalau di data ada:
 
-- Spasi tak terlihat di belakang nomor (`JM02E1618594 ` beda dengan `JM02E1618594`)
-- Huruf kecil vs besar (`jm02e1618594` beda dengan `JM02E1618594`)
+- Spasi tak terlihat di belakang nomor (`JM0000555156 ` beda dengan `JM0000555156`)
+- Huruf kecil vs besar (`JM0000555156` beda dengan `JM0000555156`)
 - Karakter aneh dari copy-paste (enter, tab, non-breaking space)
 - Format berbeda antara sumber data
 
@@ -33,10 +33,10 @@ Ini bukan bug Excel. Ini cara kerja Excel. Excel mencari **persis apa yang diket
 
 ### Contoh konkret yang sering terjadi
 
-Pemilik proyek ingin mencari unit dengan nomor mesin `JM02E1618594`. Dia cukup ketik `1618594` (potongan nomornya). Excel:
+Pemilik proyek ingin mencari unit dengan nomor mesin `JM0000555156`. Dia cukup ketik `1618594` (potongan nomornya). Excel:
 
 - Kalau ketik `1618594` tanpa huruf depan → **tidak ketemu** (karena Excel cari persis string itu)
-- Kalau ketik `JM02E1618594` tapi di database ada spasi di belakang → **tidak ketemu**
+- Kalau ketik `JM0000555156` tapi di database ada spasi di belakang → **tidak ketemu**
 
 Padahal data jelas ada.
 
@@ -60,7 +60,7 @@ Sebuah aplikasi kecil yang:
 
 1. **Satu kotak input.** Pemilik proyek ketik apa saja — potongan nomor rangka, nomor mesin, nomor polisi, nama nasabah, apa pun.
 2. **Hasil instan.** Baris yang cocok langsung muncul.
-3. **Pencocokan longgar, bukan persis.** Ketik `1618594` harus cocok dengan `JM02E1618594`. Ketik `jm02e` harus cocok dengan `JM02E`. Spasi, huruf besar-kecil, dan karakter aneh **tidak boleh** menggagalkan pencarian.
+3. **Pencocokan longgar, bukan persis.** Ketik `1618594` harus cocok dengan `JM0000555156`. Ketik `jm02e` harus cocok dengan `JM02E`. Spasi, huruf besar-kecil, dan karakter aneh **tidak boleh** menggagalkan pencarian.
 4. **Hasil menampilkan data asli.** Yang dilihat = data asli, bukan versi "yang dibersihkan". Pembersihan hanya terjadi di belakang layar.
 5. **Cari di semua kolom sekaligus.** Tidak perlu pilih kolom dulu seperti filter Excel.
 

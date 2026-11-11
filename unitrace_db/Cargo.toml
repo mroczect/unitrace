@@ -2,7 +2,7 @@
 name = "unitrace_db"
 version = "0.1.0"
 readme = "README.md"
-description = "Facade untuk unitrace_db — thin re-export dari unitrace_db_core"
+description = "Public facade for the unitrace database workspace"
 authors.workspace = true
 categories.workspace = true
 edition.workspace = true
@@ -13,6 +13,8 @@ license.workspace = true
 keywords.workspace = true
 
 [dependencies]
+unitrace_db_handler = { path = "../unitrace_db_handler" }
+unitrace_db_core = { path = "../unitrace_db_core" }
 
 [lints]
 workspace = true
