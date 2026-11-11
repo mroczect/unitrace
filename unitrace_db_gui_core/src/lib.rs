@@ -26,8 +26,7 @@ impl GuiController for DefaultGuiController {
             };
         }
 
-        let query = match SearchQuery::try_new(trimmed.to_string(), SearchMode::Normal, None, None)
-        {
+        let query = match SearchQuery::try_new(trimmed.to_string(), SearchMode::Normal, None, None) {
             Ok(q) => q,
             Err(e) => {
                 return ViewState {
