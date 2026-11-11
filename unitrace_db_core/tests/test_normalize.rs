@@ -14,6 +14,8 @@ use serde_json as _;
 use sha2 as _;
 use tempfile as _;
 
+use ed25519_dalek as _;
+use ed25519_dalek as _;
 use unitrace_db_core::normalize::DefaultNormalizer;
 use unitrace_db_handler::traits::Normalizer;
 
