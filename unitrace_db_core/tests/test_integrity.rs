@@ -16,6 +16,10 @@ use serde_json as _;
 use sha2 as _;
 use tempfile::tempdir;
 
+use ed25519_dalek as _;
+use ed25519_dalek as _;
+use ed25519_dalek as _;
+use ed25519_dalek as _;
 use unitrace_db_core::checksum::checksum_hex;
 use unitrace_db_core::integrity::DefaultIntegrity;
 use unitrace_db_handler::traits::Integrity;
