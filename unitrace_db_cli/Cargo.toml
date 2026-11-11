@@ -1,7 +1,8 @@
 [package]
 name = "unitrace_db_cli"
 version = "0.1.0"
-description = "CLI to build the unitrace SQLCipher database from CSV"
+description = "Developer toolchain: build + sign + package unitrace database"
+readme = "README.md"
 authors.workspace = true
 categories.workspace = true
 edition.workspace = true
@@ -13,6 +14,11 @@ keywords.workspace = true
 
 [dependencies]
 unitrace_db = { path = "../unitrace_db" }
+ed25519-dalek = { version = "2", features = ["rand_core"] }
+rand = "0.8"
+tempfile = "3.27.0"
+hex = "0.4.3"
+serde_json = "1.0.154"
 
 [lints]
 workspace = true
