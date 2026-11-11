@@ -20,6 +20,19 @@ pub struct ColumnDef {
     identity: bool,
 }
 
+impl ColumnKind {
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Text => "text",
+            Self::Integer => "integer",
+            Self::Decimal => "decimal",
+            Self::Date => "date",
+            Self::Boolean => "boolean",
+        }
+    }
+}
+
 impl ColumnDef {
     pub fn try_new(name: String, kind: ColumnKind) -> Result<Self, Error> {
         validate_column_name(&name)?;

@@ -2,7 +2,7 @@
 name = "unitrace_db_core"
 version = "0.1.0"
 readme = "README.md"
-description = "core db implementation"
+description = "Concrete implementation of the unitrace database"
 authors.workspace = true
 categories.workspace = true
 edition.workspace = true
@@ -13,6 +13,17 @@ license.workspace = true
 keywords.workspace = true
 
 [dependencies]
+csv = "1.4.0"
+hex = "0.4.3"
+rusqlite = { version = "0.42.0", features = ["bundled-sqlcipher-vendored-openssl"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+sha2 = "0.11.1"
+unitrace_db_handler = { path = "../unitrace_db_handler" }
+
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+tempfile = "3.27.0"

@@ -79,12 +79,18 @@ fn test_record_try_new_identity_mismatch_value() {
 }
 
 #[test]
-fn test_record_try_new_identity_mismatch_parse_error() {
+fn test_record_try_new_invalid_integer_field() {
     let schema = make_schema_with_identity();
     let fields = vec!["not_a_number".to_string(), "Alice".to_string()];
     let result = Record::try_new(42, fields, schema);
     assert!(result.is_err());
+    let err = result.unwrap_err();
     assert!(
-        matches!(result.unwrap_err(), Error::IdentityMismatch { id: 42, column_value } if column_value == "not_a_number")
+        matches!(
+            err,
+            Error::FieldTypeMismatch { ref column, ref actual, .. }
+                if column == "id" && actual == "not_a_number"
+        ),
+        "expected FieldTypeMismatch, got {err:?}"
     );
 }

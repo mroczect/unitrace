@@ -54,3 +54,16 @@ fn test_error_display_record_length_mismatch() {
         "record length mismatch: expected 3, found 2"
     );
 }
+
+#[test]
+fn test_error_display_field_type_mismatch() {
+    let err = Error::FieldTypeMismatch {
+        column: "angsuran_ke".to_string(),
+        expected: "integer",
+        actual: "abc".to_string(),
+    };
+    let display = format!("{}", err);
+    assert!(display.contains("angsuran_ke"));
+    assert!(display.contains("integer"));
+    assert!(display.contains("abc"));
+}

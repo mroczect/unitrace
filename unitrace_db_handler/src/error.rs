@@ -4,16 +4,27 @@ use core::fmt;
 #[non_exhaustive]
 pub enum Error {
     EmptyKey,
-    KeyTooShort { min: usize, got: usize },
+    KeyTooShort {
+        min: usize,
+        got: usize,
+    },
     EmptySchema,
     EmptyColumnName,
     InvalidColumnName(String),
-    ColumnNameTooLong { max: usize, got: usize },
+    ColumnNameTooLong {
+        max: usize,
+        got: usize,
+    },
     DuplicateColumn(String),
-    MultipleIdentityColumns { count: usize },
+    MultipleIdentityColumns {
+        count: usize,
+    },
     ColumnNotFound(String),
     EmptyKeyword,
-    KeywordTooShort { min: usize, got: usize },
+    KeywordTooShort {
+        min: usize,
+        got: usize,
+    },
     EmptyDataVersion,
     InvalidBuiltAt,
     InvalidChecksumHex,
@@ -23,13 +34,30 @@ pub enum Error {
     Io(String),
     Json(String),
     Csv(String),
-    SchemaVersionMismatch { expected: u32, found: u32 },
-    ChecksumMismatch { expected: String, found: String },
+    SchemaVersionMismatch {
+        expected: u32,
+        found: u32,
+    },
+    ChecksumMismatch {
+        expected: String,
+        found: String,
+    },
     CipherUnavailable,
     InvalidKey,
     MissingCsvColumn(String),
-    RecordLengthMismatch { expected: usize, found: usize },
-    IdentityMismatch { id: i64, column_value: String },
+    RecordLengthMismatch {
+        expected: usize,
+        found: usize,
+    },
+    FieldTypeMismatch {
+        column: String,
+        expected: &'static str,
+        actual: String,
+    },
+    IdentityMismatch {
+        id: i64,
+        column_value: String,
+    },
     ArithmeticOverflow,
     InvalidConfig(String),
 }
@@ -94,6 +122,16 @@ impl fmt::Display for Error {
                 write!(
                     f,
                     "record length mismatch: expected {expected}, found {found}"
+                )
+            }
+            Self::FieldTypeMismatch {
+                column,
+                expected,
+                actual,
+            } => {
+                write!(
+                    f,
+                    "field type mismatch in column {column:?}: expected {expected}, got {actual:?}"
                 )
             }
             Self::IdentityMismatch { id, column_value } => {

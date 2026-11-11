@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use crate::column::ColumnDef;
+use crate::column::{ColumnDef, ColumnKind};
 use crate::error::Error;
 
 pub const SCHEMA_VERSION: u32 = 1;
@@ -86,4 +86,71 @@ impl Schema {
             .filter_map(|(i, c)| c.is_identity().then_some(i))
             .collect()
     }
+
+    pub fn validate_field_types(&self, fields: &[String]) -> Result<(), Error> {
+        if fields.len() != self.columns.len() {
+            return Err(Error::RecordLengthMismatch {
+                expected: self.columns.len(),
+                found: fields.len(),
+            });
+        }
+        for (col, value) in self.columns.iter().zip(fields) {
+            validate_field_value(col.name(), col.kind(), value)?;
+        }
+        Ok(())
+    }
+}
+
+fn validate_field_value(column: &str, kind: ColumnKind, value: &str) -> Result<(), Error> {
+    if value.trim().is_empty() {
+        return Ok(());
+    }
+    let ok = match kind {
+        ColumnKind::Text => true,
+        ColumnKind::Integer => value.parse::<i64>().is_ok(),
+        ColumnKind::Decimal => value.parse::<f64>().is_ok(),
+        ColumnKind::Date => is_valid_date(value),
+        ColumnKind::Boolean => is_valid_boolean(value),
+    };
+    if ok {
+        Ok(())
+    } else {
+        Err(Error::FieldTypeMismatch {
+            column: column.to_string(),
+            expected: kind.as_str(),
+            actual: value.to_string(),
+        })
+    }
+}
+
+fn is_valid_date(value: &str) -> bool {
+    let bytes = value.as_bytes();
+    if bytes.len() != 10 {
+        return false;
+    }
+    let mut digits = 0usize;
+    let mut sep_count = 0usize;
+    let mut sep_char = 0u8;
+    for &b in bytes {
+        if b.is_ascii_digit() {
+            digits = digits.saturating_add(1);
+        } else if b == b'-' || b == b'/' {
+            sep_count = sep_count.saturating_add(1);
+            if sep_count == 1 {
+                sep_char = b;
+            } else if b != sep_char {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+    digits == 8 && sep_count == 2
+}
+
+fn is_valid_boolean(value: &str) -> bool {
+    value.eq_ignore_ascii_case("true")
+        || value.eq_ignore_ascii_case("false")
+        || value == "1"
+        || value == "0"
 }

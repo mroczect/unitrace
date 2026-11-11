@@ -1,5 +1,5 @@
 [workspace]
-members = ["unitrace_db","unitrace_db_core","unitrace_db_handler"]
+members = ["unitrace_db","unitrace_db_core", "unitrace_db_gui", "unitrace_db_gui_core", "unitrace_db_gui_handler","unitrace_db_handler"]
 resolver = "3"
 
 [workspace.package]

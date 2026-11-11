@@ -12,12 +12,7 @@ pub struct Record {
 
 impl Record {
     pub fn try_new(id: i64, fields: Vec<String>, schema: Arc<Schema>) -> Result<Self, Error> {
-        if fields.len() != schema.len() {
-            return Err(Error::RecordLengthMismatch {
-                expected: schema.len(),
-                found: fields.len(),
-            });
-        }
+        schema.validate_field_types(&fields)?;
         if let Some(idx) = schema.identity_index() {
             let column_value = fields
                 .get(idx)
