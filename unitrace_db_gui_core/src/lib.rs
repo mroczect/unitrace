@@ -1,6 +1,7 @@
-use unitrace_db::DatabaseReader;
-use unitrace_db::{DefaultSearcher, SearchMode, SearchQuery};
+use unitrace_db_core::searcher::DefaultSearcher;
 use unitrace_db_gui_handler::{GuiController, NotFoundProof, RowViewModel, ViewState};
+use unitrace_db_handler::traits::DatabaseReader;
+use unitrace_db_handler::{SearchMode, SearchQuery};
 
 #[derive(Debug)]
 pub struct DefaultGuiController {
