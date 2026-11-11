@@ -1,0 +1,15 @@
+[package]
+name = "unitrace_db_ffi"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+unitrace_db = { path = "../unitrace_db" }
+unitrace_db_gui_core = { path = "../unitrace_db_gui_core" }
+unitrace_db_gui_handler = { path = "../unitrace_db_gui_handler" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+libc = "0.2"
