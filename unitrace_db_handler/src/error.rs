@@ -60,6 +60,7 @@ pub enum Error {
     },
     ArithmeticOverflow,
     InvalidConfig(String),
+    PackageInvalid(String),
 }
 
 impl fmt::Display for Error {
@@ -142,6 +143,7 @@ impl fmt::Display for Error {
             }
             Self::ArithmeticOverflow => f.write_str("arithmetic overflow"),
             Self::InvalidConfig(c) => write!(f, "invalid configuration: {c}"),
+            Self::PackageInvalid(c) => write!(f, "invalid package: {c}"),
         }
     }
 }
